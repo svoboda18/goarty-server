@@ -1,0 +1,5 @@
+Django==4.2.7
+django-elasticsearch-dsl==8.0
+elastic-transport==8.10.0
+elasticsearch==8.11.0
+elasticsearch-dsl==8.11.0

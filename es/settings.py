@@ -37,7 +37,8 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    
+    "django_elasticsearch_dsl",
+    "es"
 ]
 
 MIDDLEWARE = [
@@ -81,6 +82,14 @@ DATABASES = {
     }
 }
 
+# Indextion
+ELASTICSEARCH_DSL = {
+    'default': {
+        'hosts': 'https://localhost:9200',
+        'http_auth': ('elastic', 'FIo1XuD8w9dd8Bc4bEcP'),
+        'ca_certs': '/workspaces/es-c/config/certs/http_ca.crt'
+    }
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators

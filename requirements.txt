@@ -5,3 +5,5 @@ elasticsearch==8.11.0
 elasticsearch-dsl==8.11.0
 Faker==20.1.0
 factory-boy==3.3.0
+djangorestframework==3.14.0
+jwt==1.3.1

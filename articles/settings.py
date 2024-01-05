@@ -18,11 +18,12 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "django_elasticsearch_dsl",
-    "es",
-    "user",
     'rest_framework',
-    'corsheaders',
+    "django_elasticsearch_dsl",
+    'django_elasticsearch_dsl_drf',
+    "user",
+    "articles",
+    "search_indexes"
 ]
 
 MIDDLEWARE = [
@@ -33,10 +34,10 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "corsheaders.middleware.CorsMiddleware",  # Add this line for CORS support
+    #"corsheaders.middleware.CorsMiddleware",  # Add this line for CORS support
 ]
 
-ROOT_URLCONF = "es.urls"
+ROOT_URLCONF = "articles.urls"
 
 TEMPLATES = [
     {
@@ -54,7 +55,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "es.wsgi.application"
+WSGI_APPLICATION = "articles.wsgi.application"
 APPEND_SLASH = False
 
 # Database

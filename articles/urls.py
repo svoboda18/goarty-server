@@ -1,16 +1,26 @@
-from django.contrib import admin
-from django.urls import include, path, re_path
-from .views.api.articles import AriticleViewSet
+from django.urls import re_path, include
+from .views import AriticleViewSet, KeywordViewSet, RefrenceViewSet, InstitutionViewSet ,AuthorViewSet
 from rest_framework import routers
 
-from search_indexes import urls as search_index_urls
-
 articles = routers.DefaultRouter()
-articles.register(r'articles', AriticleViewSet)
+articles.register(r'', AriticleViewSet)
+
+keywords = routers.DefaultRouter()
+keywords.register(r'', KeywordViewSet)
+
+refrences = routers.DefaultRouter()
+refrences.register(r'', RefrenceViewSet)
+
+institutions = routers.DefaultRouter()
+institutions.register(r'', InstitutionViewSet)
+
+authors = routers.DefaultRouter()
+authors.register(r'', AuthorViewSet)
 
 urlpatterns = [
-    path("admin/", admin.site.urls),
-    path('api/', include('user.urls')),
-    *articles.urls,
-    re_path(r'^search/', include(search_index_urls)),
+    re_path(r'^articles/?', include(articles.urls)),
+    re_path(r'^keywords/?', include(keywords.urls)),
+    re_path(r'^refrences/?', include(refrences.urls)),
+    re_path(r'^institutions/?', include(institutions.urls)),
+    re_path(r'^authors/?', include(authors.urls)),
 ]

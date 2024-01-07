@@ -1,13 +1,8 @@
 from collections import OrderedDict
 from rest_framework.serializers import ModelSerializer, SerializerMethodField, ValidationError
 from django.core.exceptions import ValidationError as DjangoValidationError
-from rest_framework.fields import (get_error_detail, set_value, SkipField)
-from .models.article import Article
-
-from .models.article import Author
-from .models.article import Keyword
-from .models.article import Institution
-from .models.article import Refrence
+from rest_framework.fields import get_error_detail, set_value, SkipField
+from .models import Article, Author, Keyword, Institution, Refrence
 
 import pypdf, re
 
@@ -32,7 +27,6 @@ class RefrenceSerializer(ModelSerializer):
             'id', 'name'
         )
 
-
 class KeywordSerializer(ModelSerializer):
     class Meta:
         model = Refrence
@@ -50,28 +44,26 @@ class ArticleSerializer(ModelSerializer):
 
     class Meta:
         model = Article
-        fields = (
-            'id', 'title', 'body', 'resume', 'url', 'authors', 'keywords', 'institutions', 'refrences'
+        read_only_fields_for_everyone = ('id', 'url', 'created_at', 'updated_at')
+        fields = read_only_fields_for_everyone + (
+            'title', 'body', 'resume', 'authors', 'keywords', 'institutions', 'refrences'
         )
-        read_only_fields = ('title', 'body', 'resume', 'authors', 'keywords', 'institutions', 'refrences')
+        read_only_fields = ('title', 'body', 'resume', 'authors', 'keywords', 'institutions', 'refrences', 'created_at',
+            'updated_at')
 
     def to_internal_value(self, data):
         errors = OrderedDict()
         req_data = data.copy()
-        read_only_for_everyone = ['id', 'url']
 
-        for ro_field in read_only_for_everyone:
+        for ro_field in self.Meta.read_only_fields_for_everyone:
             if (ro_field in req_data):
                 errors[ro_field] = 'field is readonly'
                 if (self.instance is not None):
                     req_data.pop(ro_field, None)
 
-        #TODO: check user role
-        user = self.context['request'].user
-
         read_only_fields = super()._readable_fields
         ret = super().to_internal_value(req_data)
-        
+
         if (self.instance is None):
             return ret
 
@@ -80,7 +72,11 @@ class ArticleSerializer(ModelSerializer):
                 if not(field.field_name in data):
                     continue
 
+                """ Fake those so that validators are run. """
                 field.read_only = False
+                field.editable = True
+                field.required = True
+
                 primitive_value = field.get_value(data)
                 validate_method = getattr(self, 'validate_' + field.field_name, None)
                 try:
@@ -129,6 +125,7 @@ class ArticleSerializer(ModelSerializer):
         body = ''
         for page in reader.pages:
             text = page.extract_text()
+            print(text)
             keywords = re.search(r"keywords\s*?:?\s*?([^.]+)", text, re.I | re.M)
             if (keywords is not None):
                 for key in [*keywords.groups(0)[0].split(','), *keywords.groups(0)[0].split(';')]:

@@ -1,8 +1,7 @@
-import os
 from pathlib import Path
 from datetime import timedelta
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent
 
 SECRET_KEY = "your_secret_key"
 DEBUG = True
@@ -19,9 +18,8 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     'rest_framework',
-    "django_elasticsearch_dsl",
-    'django_elasticsearch_dsl_drf',
     "user",
+    'rest_framework_simplejwt',
     "articles",
     "search_indexes"
 ]
@@ -37,7 +35,7 @@ MIDDLEWARE = [
     #"corsheaders.middleware.CorsMiddleware",  # Add this line for CORS support
 ]
 
-ROOT_URLCONF = "articles.urls"
+ROOT_URLCONF = "urls"
 
 TEMPLATES = [
     {
@@ -55,7 +53,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "articles.wsgi.application"
+WSGI_APPLICATION = "wsgi.application"
 APPEND_SLASH = False
 
 # Database
@@ -73,6 +71,16 @@ ELASTICSEARCH_DSL = {
         'http_auth': ('elastic', 'FIo1XuD8w9dd8Bc4bEcP'),
         'ca_certs': '/workspaces/es-c/config/certs/http_ca.crt'
     }
+}
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=8),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    "ROTATE_REFRESH_TOKENS": False,
+    "BLACKLIST_AFTER_ROTATION": False,
+    "UPDATE_LAST_LOGIN": False,
+
+    "ALGORITHM": "HS256",
 }
 
 # Password validation
@@ -107,7 +115,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # REST framework settings
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',

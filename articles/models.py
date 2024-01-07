@@ -1,9 +1,16 @@
 from django.db import models
 
-from .author import Author
-from .keyword import Keyword
-from .institution import Institution
-from .refrence import Refrence
+class Author(models.Model):
+    name = models.CharField(blank=False, max_length=255)
+
+class Institution(models.Model):
+    name = models.CharField(blank=False, max_length=255)
+
+class Keyword(models.Model):
+    name = models.CharField(blank=False, max_length=64)
+
+class Refrence(models.Model):
+    name = models.CharField(blank=False, max_length=255)
 
 class Article(models.Model):
     title = models.CharField(blank=False, max_length=255)

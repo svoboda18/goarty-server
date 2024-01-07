@@ -1,16 +1,13 @@
-from django.urls import path
-from .views import (
-	UserRegistrationAPIView,
-    UserLoginAPIView,
-    UserLogoutViewAPI,
-    UserViewAPI,
+from django.urls import re_path, include
+from rest_framework.routers import DefaultRouter
 
-)
+from .views import UserModViewSet, UserRegistrationAPIView, UserViewAPI
 
+mods = DefaultRouter()
+mods.register(r'', UserModViewSet, basename='mods')
 
 urlpatterns = [
-	path('user/register/', UserRegistrationAPIView.as_view()),
-    path('user/login/', UserLoginAPIView.as_view()),
-    path('user/', UserViewAPI.as_view()),
-    path('user/logout/', UserLogoutViewAPI.as_view()),
+	re_path(r'^register/?', UserRegistrationAPIView.as_view()),
+    re_path(r'^mods/?', include(mods.urls)),
+    re_path(r'^$', UserViewAPI.as_view()),
 ]

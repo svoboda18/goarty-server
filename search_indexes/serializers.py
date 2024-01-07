@@ -1,6 +1,6 @@
 from rest_framework.serializers import SerializerMethodField
 from django_elasticsearch_dsl_drf.serializers import DocumentSerializer
-from .documents.article import ArticleDocument
+from .documents import ArticleDocument
 
 class ArticleDocumentSerializer(DocumentSerializer):
     authors = SerializerMethodField()
@@ -22,7 +22,6 @@ class ArticleDocumentSerializer(DocumentSerializer):
         else:
             return []
     
-
     def get_institutions(self, obj):
         """Get institutions."""
         if obj.institutions:
@@ -30,7 +29,6 @@ class ArticleDocumentSerializer(DocumentSerializer):
         else:
             return []
     
-
     def get_keywords(self, obj):
         """Get keywords."""
         if obj.keywords:

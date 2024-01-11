@@ -1,7 +1,11 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 
+from articles.serializers import ArticleSerializer
+
 class UserSerializer(serializers.ModelSerializer):
+	favorites = ArticleSerializer(read_only=True, many=True)
+
 	class Meta:
 		model = get_user_model()
 		fields = '__all__'

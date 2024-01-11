@@ -58,6 +58,20 @@ class ArticleDocument(Document):
             'suggest': fields.CompletionField(),
         }
     )
+    body = fields.TextField(
+        analyzer=html_strip,
+        fields={
+            'raw': fields.TextField(analyzer='keyword'),
+            'suggest': fields.CompletionField(),
+        }
+    )
+    resume = fields.TextField(
+        analyzer=html_strip,
+        fields={
+            'raw': fields.TextField(analyzer='keyword'),
+            'suggest': fields.CompletionField(),
+        }
+    )
 
     class Index:
         name = 'article'
@@ -66,9 +80,7 @@ class ArticleDocument(Document):
     class Django:
         model = Article
         fields = [
-            'body',
-            'resume',
-            'url',
+            'pdf',
             'created_at',
             'updated_at'
         ]

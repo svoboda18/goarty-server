@@ -1,5 +1,6 @@
+from articles.models import Article
 from user.models import User
-from user.permissions import IsAdminUser, IsModUser
+from user.permissions import IsAdminUser
 from .serializers import UserRegistrationSerializer, UserSerializer
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
@@ -34,6 +35,28 @@ class UserRegistrationAPIView(APIView):
 			raise
 
 class UserViewAPI(APIView):
+	def post(self, request):
+		if (not 'favorite' in request.data):
+			return Response({ 'favorite': f'field must not be empty'})
+		pk = request.data.get('favorite')
+		favorite = Article.objects.filter(id=pk).first()
+		if (favorite is None):
+			return Response({ 'detail': f'invalid article id {pk}'})
+		request.user.favorites.add(favorite)
+		return self.get(request)
+	
+	def patch(self, request):
+		if (not 'favorite' in request.data):
+			return Response({ 'favorite': f'field must not be empty'})
+		pk = request.data.get('favorite')
+		favorite = Article.objects.filter(id=pk).first()
+		if (favorite is None):
+			return Response({ 'detail': f'invalid article id {pk}'})
+		request.user.favorites.remove(favorite)
+		return self.get(request)
+
 	def get(self, request):
-		ser = UserRegistrationSerializer(instance=request.user)
-		return Response(ser.data)
+		serializer = UserSerializer(instance=request.user)
+		data = serializer.data
+		data.pop('password')
+		return Response(data=data, status=status.HTTP_200_OK)

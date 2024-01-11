@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.validators import FileExtensionValidator
 
 class Author(models.Model):
     name = models.CharField(blank=False, max_length=255)
@@ -16,7 +17,7 @@ class Article(models.Model):
     title = models.CharField(blank=False, max_length=255)
     body = models.TextField(blank=False)
     resume = models.TextField(blank=False)
-    url = models.FileField(blank=False, upload_to='uploaded_articles')
+    pdf = models.FileField(blank=False, validators=[FileExtensionValidator(allowed_extensions=['pdf'])], upload_to='uploaded_articles')
 
     authors = models.ManyToManyField(Author)
     institutions = models.ManyToManyField(Institution)

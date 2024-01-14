@@ -31,7 +31,6 @@ from django_elasticsearch_dsl_drf.pagination import PageNumberPagination
 
 class AriticleViewSet(BaseDocumentViewSet):
     serializer_class = ArticleDocumentSerializer
-    permission_classes = (AllowAny)
     parser_classes = (MultiPartParser, FormParser,)
 
     # TODO: needs clean-up
@@ -133,7 +132,7 @@ class AriticleViewSet(BaseDocumentViewSet):
             'facet': DateHistogramFacet,
             'enabled': True,
             'options': {
-                'interval': 'day',  # Adjust the interval as needed
+                'fixed_interval': '1d',
             },
         },
     }

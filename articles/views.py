@@ -8,7 +8,7 @@ from rest_framework import status
 
 from django.http import HttpResponse
 
-from user.permissions import IsAdminUser, IsModUser
+from user.permissions import IsModUser
 from .models import Article, Keyword, Refrence, Institution, Author
 from .serializers import ArticleSerializer, KeywordSerializer, RefrenceSerializer, InstitutionSerializer, AuthorSerializer
 from settings import BASE_DIR
@@ -16,7 +16,7 @@ from settings import BASE_DIR
 class AriticleViewSet(ModelViewSet):
     serializer_class = ArticleSerializer
     parser_classes = (MultiPartParser, FormParser,)
-    permission_classes = (IsAdminUser, IsModUser,)
+    permission_classes = (IsModUser,)
 
     queryset = Article.objects
 
@@ -31,7 +31,7 @@ class AriticleViewSet(ModelViewSet):
 
 class KeywordViewSet(ModelViewSet):
     serializer_class = KeywordSerializer
-    permission_classes = (IsAdminUser, IsModUser,)
+    permission_classes = (IsModUser,)
 
     queryset = Keyword.objects
 
@@ -40,7 +40,7 @@ class KeywordViewSet(ModelViewSet):
 
 class RefrenceViewSet(ModelViewSet):
     serializer_class = RefrenceSerializer
-    permission_classes = (IsAdminUser, IsModUser,)
+    permission_classes = (IsModUser,)
 
     queryset = Refrence.objects
 
@@ -49,7 +49,7 @@ class RefrenceViewSet(ModelViewSet):
 
 class InstitutionViewSet(ModelViewSet):
     serializer_class = InstitutionSerializer
-    permission_classes = (IsAdminUser, IsModUser,)
+    permission_classes = (IsModUser,)
 
     queryset = Institution.objects
 
@@ -58,7 +58,7 @@ class InstitutionViewSet(ModelViewSet):
 
 class AuthorViewSet(ModelViewSet):
     serializer_class = AuthorSerializer
-    permission_classes = (IsAdminUser, IsModUser,)
+    permission_classes = (IsModUser,)
 
     queryset = Author.objects
 

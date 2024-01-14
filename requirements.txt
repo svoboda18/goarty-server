@@ -7,5 +7,7 @@ elasticsearch-dsl==8.11.0
 djangorestframework==3.14.0
 Faker==20.1.0
 factory-boy==3.3.0
-pypdf==3.17.4
+pygrobid==0.1.6
+beautifulsoup4==4.12.2
+lxml==5.1.0
 djangorestframework-simplejwt==5.3.1

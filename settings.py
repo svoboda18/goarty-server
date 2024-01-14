@@ -68,8 +68,8 @@ DATABASES = {
 ELASTICSEARCH_DSL = {
     'default': {
         'hosts': 'https://localhost:9200',
-        'http_auth': ('elastic', 'FIo1XuD8w9dd8Bc4bEcP'),
-        'ca_certs': '/workspaces/es-c/config/certs/http_ca.crt'
+        'http_auth': ('elastic', 'z4y20z0SI6fd_BEjP+d='),
+        'ca_certs': '/workspaces/els/config/certs/http_ca.crt'
     }
 }
 

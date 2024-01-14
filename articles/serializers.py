@@ -242,9 +242,9 @@ class ArticleSerializer(ModelSerializer):
         if (keywords_soup is not None):
             keywords = keywords_soup.get_text()
 
-        # needs improvment
+        # needs more improvment
         abstract = None
-        abstract_soup = header.find('abstract')
+        abstract_soup = header.find('abstract').find('div')
         if (abstract_soup is not None):
             abstract = abstract_soup.get_text()
 

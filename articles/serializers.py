@@ -106,6 +106,30 @@ class ArticleSerializer(ModelSerializer):
             text = text.replace(m, '')
         return text
     
+
+    def extarct_authors(self, soup):
+        authors = []
+        authors_soup = soup.find_all('author')
+
+        for author in authors_soup:
+            persName = author.find('persName')
+
+            if (persName is None):
+                continue
+
+            forename = author.find('forename')
+            surname = author.find('surname')
+
+            if (forename is None or surname is None):
+                continue
+
+            first_name = author.find('forename', {'type': 'first'}).text
+            middle_name_tag = author.find('forename', {'type': 'middle'})
+            middle_name = middle_name_tag.text if middle_name_tag else None
+
+            authors.append(f"{first_name}{f' {middle_name}' if middle_name else ''} {surname.text}")
+        return authors
+    
     def gorbid_scan(self, pdf: str):
         #TODO: find way to call the softwere directly as this slows down the process
         client = GrobidClient('http://127.0.0.1', 8070)
@@ -121,19 +145,9 @@ class ArticleSerializer(ModelSerializer):
         assert(header is not None)
 
         title = header.find('titleStmt').find('title').get_text(strip=True)
-        authors = []
+        authors = self.extarct_authors(header)
         affiliations = set()
         refrences = []
-        authors_soup = header.find_all('author') # make sure to target only the header
-        
-        for author in authors_soup:
-            persName = author.find('persName')
-
-            if (persName is None):
-                continue
-
-            name = persName.get_text(strip=True, separator=' ')
-            authors.append(name)
 
         affiliations_soup = header.find_all('affiliation')
         for affiliation in affiliations_soup:
@@ -168,8 +182,59 @@ class ArticleSerializer(ModelSerializer):
             if isinstance(refrence, str):
                 continue
 
-            # needs improvment
-            refrences.append(refrence.get_text(strip=True, separator=' '))
+            analytic = refrence.find('analytic')
+            monogr = refrence.find('monogr')
+
+            if (monogr is None):
+                continue
+
+            analytic_title = None
+            if (analytic is not None):
+                analytic_title = analytic.find('title')
+            monogr_title = monogr.find('title')
+            publisher = monogr.find('publisher')
+
+            if (monogr_title is None and
+                analytic_title is None and
+                publisher is None):
+                continue
+
+            reference_authors = ', '.join(self.extarct_authors(monogr if analytic is None else analytic))
+            reference_note = f'{reference_authors}.' if reference_authors else ''
+
+            def add(p, e):
+                if e:
+                    t = e.get_text(strip=True)
+                    if t:
+                        p += f' {t}.'
+                return p
+
+            reference_note = add(reference_note, analytic_title)
+            reference_note = add(reference_note, monogr_title)
+            reference_note = add(reference_note, publisher)
+
+            if (reference_note == ''):
+                continue
+
+            #TODO: add the missing fildes to improve accurency
+            date = monogr.find('date', { 'type': 'published', 'when': True})
+            issue = monogr.find('biblScope', { 'unit': 'issue'})
+            page = monogr.find('biblScope', { 'unit': 'page', 'from': True, 'to': True})
+            volume = monogr.find('biblScope', { 'unit': 'volume'})
+
+            parts = []
+            if (date is not None):
+                parts.append(date.get("when"))
+            if (volume is not None):
+                parts.append(volume.text)
+            if (issue is not None):
+                parts.append(issue.text)
+            if (page is not None):
+                parts.append(f'{page.get("from")}-{page.get("to")}')
+
+            reference_note += ', '.join(filter(lambda p: p != '', parts))
+
+            refrences.append(reference_note)
 
         # needs improvment
         keywords = None
@@ -192,11 +257,11 @@ class ArticleSerializer(ModelSerializer):
         for section_div in body_divs:
             section_head = section_div.find('head')
             number = section_head.get('n', None)
-            title = section_head.get_text()
+            section_title = section_head.get_text()
             p = ''
             if (number is not None):
                 p = f'{number} '
-            p += title
+            p += section_title
             p += '\n'
             for child in section_div.children:
                 if (child is section_head):
@@ -211,7 +276,6 @@ class ArticleSerializer(ModelSerializer):
         article = Article.objects.create(**validated_data)
 
         title, authors, abstract, keywords, body, affiliations, refrences = self.gorbid_scan(article.pdf.path)
-        print(keywords)
 
         article.title = title
         article.resume = abstract

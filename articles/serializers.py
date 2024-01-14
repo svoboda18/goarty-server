@@ -187,18 +187,22 @@ class ArticleSerializer(ModelSerializer):
 
         assert(body_soup is not None)
 
-        body_heads = body_soup.find_all('head', attrs={'n': True})
+        body_divs = body_soup.find_all('div')
         body = ''
-        for section_head in body_heads:
-            number = section_head.get('n')
-            section_title = section_head.get_text()
-            p = f'{number} {section_title}\n'
-            for child in section_head.parent.children:
+        for section_div in body_divs:
+            section_head = section_div.find('head')
+            number = section_head.get('n', None)
+            title = section_head.get_text()
+            p = ''
+            if (number is not None):
+                p = f'{number} '
+            p += title
+            p += '\n'
+            for child in section_div.children:
                 if (child is section_head):
                     continue
-                p += '\n'
                 p += child.get_text()
-
+                p += '\n'
             body += p
 
         return (title, authors, abstract, keywords, body, affiliations, refrences)

@@ -18,6 +18,8 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     'rest_framework',
+    'django_elasticsearch_dsl',
+    'django_elasticsearch_dsl_drf',
     "user",
     'rest_framework_simplejwt',
     "articles",

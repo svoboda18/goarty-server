@@ -61,7 +61,7 @@ class ArticleDocument(Document):
     body = fields.TextField(
         analyzer=html_strip,
         fields={
-            'raw': fields.TextField(analyzer='keyword'),
+            'raw': fields.TextField(),
             'suggest': fields.CompletionField(),
         }
     )

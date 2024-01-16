@@ -15,35 +15,37 @@ from django_elasticsearch_dsl_drf.constants import (
     LOOKUP_QUERY_LT,
     LOOKUP_QUERY_IN,
     LOOKUP_QUERY_EXCLUDE,
-    LOOKUP_QUERY_CONTAINS
+    LOOKUP_QUERY_CONTAINS,
+    SUGGESTER_TERM,
+    SUGGESTER_PHRASE,
+    SUGGESTER_COMPLETION
 )
 from django_elasticsearch_dsl_drf.filter_backends import (
     FilteringFilterBackend,
-    IdsFilterBackend,
     OrderingFilterBackend,
     DefaultOrderingFilterBackend,
     CompoundSearchFilterBackend,
-    FacetedSearchFilterBackend
+    FacetedSearchFilterBackend,
+    SuggesterFilterBackend,
 )
-from django_elasticsearch_dsl_drf.viewsets import BaseDocumentViewSet
+from django_elasticsearch_dsl_drf.viewsets import DocumentViewSet
 from django_elasticsearch_dsl_drf.pagination import PageNumberPagination
 
 
-class AriticleViewSet(BaseDocumentViewSet):
+class AriticleViewSet(DocumentViewSet):
     serializer_class = ArticleDocumentSerializer
     parser_classes = (MultiPartParser, FormParser,)
 
-    # TODO: needs clean-up
     document = ArticleDocument
     pagination_class = PageNumberPagination
     lookup_field = 'id'
     filter_backends = [
         FilteringFilterBackend,
-        IdsFilterBackend,
         OrderingFilterBackend,
         DefaultOrderingFilterBackend,
         CompoundSearchFilterBackend,
-        FacetedSearchFilterBackend
+        FacetedSearchFilterBackend,
+        SuggesterFilterBackend
     ]
     search_fields = (
         'title',
@@ -52,8 +54,22 @@ class AriticleViewSet(BaseDocumentViewSet):
         'keywords',
     )
 
+    suggester_fields = {
+        'title_suggest': {
+            'field': 'title.suggest',
+            'suggesters': [
+                SUGGESTER_TERM,
+                SUGGESTER_PHRASE,
+                SUGGESTER_COMPLETION,
+            ],
+            'options': {
+                'size': 7,
+                'skip_duplicates': True,
+            },
+        },
+    }
     filter_fields = {
-        'created_at': {
+        'date': {
             'field': 'created_at',
             'lookups': [
                 LOOKUP_QUERY_GTE,
@@ -127,7 +143,7 @@ class AriticleViewSet(BaseDocumentViewSet):
         },
     }
     faceted_search_fields = {
-        'created_at': {
+        'date': {
             'field': 'created_at',
             'facet': DateHistogramFacet,
             'enabled': True,
@@ -138,6 +154,6 @@ class AriticleViewSet(BaseDocumentViewSet):
     }
     
     ordering_fields = {
-        'created_at': 'created_at',
+        'date': 'created_at',
     }
-    ordering = ('created_at',)
+    ordering = ('-date',)

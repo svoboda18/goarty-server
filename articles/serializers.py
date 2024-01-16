@@ -4,7 +4,7 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework.fields import get_error_detail, set_value, SkipField
 from .models import Article, Author, Keyword, Institution, Refrence
 
-import re
+import traceback, re
 
 from bs4 import BeautifulSoup
 from grobid.client import GrobidClient
@@ -178,7 +178,7 @@ class ArticleSerializer(ModelSerializer):
             affiliations.add(institution_name.strip())
 
         refrences_soup = soup.find('listBibl')
-        for refrence in refrences_soup:
+        for refrence in refrences_soup.children:
             if isinstance(refrence, str):
                 continue
 
@@ -200,41 +200,24 @@ class ArticleSerializer(ModelSerializer):
                 continue
 
             reference_authors = ', '.join(self.extarct_authors(monogr if analytic is None else analytic))
-            reference_note = f'{reference_authors}.' if reference_authors else ''
+            reference_note = f'{reference_authors}. ' if reference_authors else ''
 
-            def add(p, e):
-                if e:
-                    t = e.get_text(strip=True)
-                    if t:
-                        p += f' {t}.'
-                return p
+            reference_note += ' '.join(text for text in (part.text for part in (analytic_title, monogr_title, publisher) if part) if text)
 
-            reference_note = add(reference_note, analytic_title)
-            reference_note = add(reference_note, monogr_title)
-            reference_note = add(reference_note, publisher)
-
-            if (reference_note == ''):
-                continue
-
-            #TODO: add the missing fildes to improve accurency
             date = monogr.find('date', { 'type': 'published', 'when': True})
             issue = monogr.find('biblScope', { 'unit': 'issue'})
             page = monogr.find('biblScope', { 'unit': 'page', 'from': True, 'to': True})
             volume = monogr.find('biblScope', { 'unit': 'volume'})
+            note = refrence.find('note')
+            idno = monogr.find('idno')
 
-            parts = []
-            if (date is not None):
-                parts.append(date.get("when"))
-            if (volume is not None):
-                parts.append(volume.text)
-            if (issue is not None):
-                parts.append(issue.text)
-            if (page is not None):
-                parts.append(f'{page.get("from")}-{page.get("to")}')
+            reference_note += ' '
+            reference_note += ', '.join(part.text for part in (date, volume, issue, note, idno) if part)
 
-            reference_note += ', '.join(filter(lambda p: p != '', parts))
+            if page:
+                reference_note += f', {page.get("from")}-{page.get("to")}'
 
-            refrences.append(reference_note)
+            refrences.append(reference_note + '.')
 
         # needs improvment
         keywords = None
@@ -266,7 +249,7 @@ class ArticleSerializer(ModelSerializer):
             for child in section_div.children:
                 if (child is section_head):
                     continue
-                p += child.get_text()
+                p += child.get_text(strip=True)
                 p += '\n'
             body += p
 
@@ -293,19 +276,15 @@ class ArticleSerializer(ModelSerializer):
                 institution.save()
             article.institutions.add(institution)
 
-        for key in keywords.splitlines():
-            #TODO: needs better approach
-            if (len(key) > 50):
-                continue
-    
-            key = self.trim(key, seed=r'\n\*\s\$')
+        for name in keywords.splitlines():
+            name = self.trim(name, seed=r'\n\*\s\$')
 
-            if (key == '' or len(key) < 2):
+            if (name == '' or len(name) < 2):
                 continue
 
-            keyword = Keyword.objects.filter(name=key).first()
+            keyword = Keyword.objects.filter(name=name).first()
             if keyword is None:
-                keyword = Keyword(name=key)
+                keyword = Keyword(name=name)
                 keyword.save()
             article.keywords.add(keyword)
 

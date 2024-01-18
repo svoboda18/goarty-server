@@ -106,7 +106,6 @@ class ArticleSerializer(ModelSerializer):
             text = text.replace(m, '')
         return text
     
-
     def extarct_authors(self, soup):
         authors = []
         authors_soup = soup.find_all('author')
@@ -123,15 +122,16 @@ class ArticleSerializer(ModelSerializer):
             if (forename is None or surname is None):
                 continue
 
-            first_name = author.find('forename', {'type': 'first'}).text
+            # first and middle names could be the same node
             middle_name_tag = author.find('forename', {'type': 'middle'})
             middle_name = middle_name_tag.text if middle_name_tag else None
 
-            authors.append(f"{first_name}{f' {middle_name}' if middle_name else ''} {surname.text}")
+            authors.append(f"{forename.text}{f' {middle_name}' if middle_name else ''} {surname.text}")
         return authors
     
-    def gorbid_scan(self, pdf: str):
+    def grobid_scan(self, pdf: str):
         #TODO: find way to call the softwere directly as this slows down the process
+        # applies only to bigger pdf files
         client = GrobidClient('http://127.0.0.1', 8070)
         res, status = client.serve('processFulltextDocument', pdf, teiCoordinates=[])
 
@@ -169,13 +169,9 @@ class ArticleSerializer(ModelSerializer):
             if (institution is None and department is None):
                 continue
 
-            institution_name = ''
-            if (institution is not None):
-                institution_name = institution.get_text(strip=True)
-            if (department is not None):
-                institution_name = f'{institution_name} {department.get_text(strip=True)}'
+            institution_name = ' '.join(part.text for part in (institution, department) if part)
 
-            affiliations.add(institution_name.strip())
+            affiliations.add(institution_name)
 
         refrences_soup = soup.find('listBibl')
         for refrence in refrences_soup.children:
@@ -203,6 +199,9 @@ class ArticleSerializer(ModelSerializer):
             reference_note = f'{reference_authors}. ' if reference_authors else ''
 
             reference_note += ' '.join(text for text in (part.text for part in (analytic_title, monogr_title, publisher) if part) if text)
+
+            if not reference_note:
+                continue
 
             date = monogr.find('date', { 'type': 'published', 'when': True})
             issue = monogr.find('biblScope', { 'unit': 'issue'})
@@ -242,7 +241,7 @@ class ArticleSerializer(ModelSerializer):
             number = section_head.get('n', None)
             section_title = section_head.get_text()
             p = ''
-            if (number is not None):
+            if (number):
                 p = f'{number} '
             p += section_title
             p += '\n'
@@ -258,7 +257,18 @@ class ArticleSerializer(ModelSerializer):
     def create(self, validated_data):
         article = Article.objects.create(**validated_data)
 
-        title, authors, abstract, keywords, body, affiliations, refrences = self.gorbid_scan(article.pdf.path)
+        # t1 = time.time()
+        try:
+            title, authors, abstract, keywords, body, affiliations, refrences = self.grobid_scan(article.pdf.path)
+        except Exception:
+            exception_traceback = traceback.format_exc()
+
+            article.delete()
+
+            raise ValidationError({ 'message': 'well, our backends are trying thier best!', 'stacktrace': exception_traceback.splitlines()}, code=400)
+        # t2 = time.time()
+
+        # print('grobid_scan took: ' + str(t2 - t1))
 
         article.title = title
         article.resume = abstract
@@ -278,8 +288,10 @@ class ArticleSerializer(ModelSerializer):
 
         for name in keywords.splitlines():
             name = self.trim(name, seed=r'\n\*\s\$')
+            sz = len(name)
 
-            if (name == '' or len(name) < 2):
+            # TODO:?
+            if (name == '' or sz < 2 or sz > 50):
                 continue
 
             keyword = Keyword.objects.filter(name=name).first()

@@ -4,17 +4,18 @@ version: '3'
 
 services:
   app:
-    build: 
+    build:
+      image: mcr.microsoft.com/devcontainers/universal:2.6.0-focal
       context: .
-      dockerfile: Dockerfile
+      command: pip install -r requirements.txt
+    restart: always
     ports:
       - 8000:8000
     depends_on:
       - elasticsearch
       - gorbird
-    links:
-      - elasticsearch
-      - gorbird
+    network_mode: service:elasticsearch
+    command: manage.py runserver
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.15.1
@@ -24,6 +25,7 @@ services:
       - authentication.enabled=false
       - discovery.type=single-node
       - xpack.security.enabled=false
+    network_mode: service:grobird
     
   gorbird:
     container_name: grobid

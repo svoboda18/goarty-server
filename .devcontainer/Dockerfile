@@ -1,6 +1,6 @@
 # Dockerfile
 
-FROM python:3.8
+FROM mcr.microsoft.com/devcontainers/base:ubuntu-18.04
 
 WORKDIR /app
 

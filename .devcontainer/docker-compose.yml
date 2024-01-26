@@ -1,0 +1,37 @@
+# docker-compose.yml
+
+version: '3'
+
+services:
+  app:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 8000:8000
+    depends_on:
+      - elasticsearch
+      - gorbird
+    links:
+      - elasticsearch
+      - gorbird
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.15.1
+    ports:
+      - 9200:9200
+    environment:
+      - authentication.enabled=false
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    
+  gorbird:
+    container_name: grobid
+    image: grobid/grobid:0.8.0
+    ports:
+      - 8070:8070
+    environment:
+      - JAVA_OPTS=-Xmx2G
+      - JAVA_XMX=4G
+      - JAVA_XMS=2G
+      - discovery.type=single-node

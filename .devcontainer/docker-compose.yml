@@ -27,7 +27,7 @@ services:
     
   gorbird:
     container_name: grobid
-    image: grobid/grobid:0.8.0
+    image: lfoppiano/grobid:0.8.0
     ports:
       - 8070:8070
     environment:

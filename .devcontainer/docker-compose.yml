@@ -4,31 +4,36 @@ version: '3'
 
 services:
   app:
+    container_name: app
     image: mcr.microsoft.com/devcontainers/python:0-3.11-bullseye
-    restart: always
     ports:
       - 8000:8000
+
+    volumes:
+      - ..:/workspace:cached
+
+    command: sleep infinity
     depends_on:
       - elasticsearch
       - gorbird
-    command:
-      - pip install -r requirements.txt
-      - python manage.py makemigrations
-      - python manage.py migrate
-      - python manage.py runserver
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.15.1
+    container_name: elasticsearch
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.0
+    ports:
+      - 9200:9200
     environment:
       - authentication.enabled=false
-      - discovery.type=single-node
       - xpack.security.enabled=false
+      - discovery.type=single-node
+      - xpack.ml.enabled=false
+      - "ES_JAVA_OPTS=-Xms2G -Xmx2G"
 
   gorbird:
     container_name: grobid
+    ports:
+      - 8070:8070
     image: lfoppiano/grobid:0.8.0
     environment:
-      - JAVA_OPTS=-Xmx2G
       - JAVA_XMX=4G
       - JAVA_XMS=2G
-      - discovery.type=single-node

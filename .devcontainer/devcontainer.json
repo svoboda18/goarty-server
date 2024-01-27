@@ -17,7 +17,7 @@
   },
 
 	"postCreateCommand": {
-		"app": "pip3 install --user -r requirements.txt && python manage.py runserver"
+		"app": "pip3 install --user -r requirements.txt && python manage.py runserver 0.0.0.0:8000"
 	},
 
 	"forwardPorts": [8000, 8070, 9200]

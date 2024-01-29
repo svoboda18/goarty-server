@@ -132,7 +132,7 @@ class ArticleSerializer(ModelSerializer):
     def grobid_scan(self, pdf: str):
         #TODO: find way to call the softwere directly as this slows down the process
         # applies only to bigger pdf files
-        client = GrobidClient('http://127.0.0.1', 8070)
+        client = GrobidClient('http://grobid', 8070)
         res, status = client.serve('processFulltextDocument', pdf, teiCoordinates=[])
 
         assert(status == 200)

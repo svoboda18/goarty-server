@@ -1,24 +1,17 @@
 {
 	"name": "Django, Elasticsearch and Gorbid",
 	"dockerComposeFile": "docker-compose.yml",
-	"service": "app",
-	"workspaceFolder": "/workspace",
-    "customizations": {
-        "codespaces": {
-          "openFiles": [
-            "urls.py"
-          ]
-        },
-        "vscode": {
-          "extensions": [
-            "ms-python.python"
-        ]
+	"workspaceFolder": "/goarty",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
+  },
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/python/current/bin/python"
+      }
     }
   },
-
-	"postCreateCommand": {
-		"app": "pip3 install --user -r requirements.txt && python manage.py runserver 0.0.0.0:8000"
-	},
-
-	"forwardPorts": [8000, 8070, 9200]
+	"service": "app",
+	"forwardPorts": [8000]
 }

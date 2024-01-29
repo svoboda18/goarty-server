@@ -6,7 +6,7 @@ from .models import Article, Author, Keyword, Institution, Refrence
 
 import traceback, re
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, PageElement
 from grobid.client import GrobidClient
 
 class AuthorSerializer(ModelSerializer):
@@ -150,7 +150,7 @@ class ArticleSerializer(ModelSerializer):
         refrences = []
 
         affiliations_soup = header.find_all('affiliation')
-        for affiliation in affiliations_soup:
+        for affiliation in affiliations_soup.children:
             #TODO: link each author with correspoding affiliation
             # this needs more research
             index_soup = affiliation.get('key', default=None)
@@ -175,7 +175,7 @@ class ArticleSerializer(ModelSerializer):
 
         refrences_soup = soup.find('listBibl')
         for refrence in refrences_soup.children:
-            if isinstance(refrence, str):
+            if not isinstance(refrence, PageElement):
                 continue
 
             analytic = refrence.find('analytic')
@@ -254,6 +254,15 @@ class ArticleSerializer(ModelSerializer):
 
         return (title, authors, abstract, keywords, body, affiliations, refrences)
 
+    def create_if_needed_then_add(self, list, model, instance, rel_name):
+        for name in list:
+            obj = model.objects.filter(name=name).first()
+            if (obj is None):
+                obj = model(name=name)
+                obj.save()
+            field = getattr(instance, rel_name)
+            field.add(obj)
+
     def create(self, validated_data):
         article = Article.objects.create(**validated_data)
 
@@ -265,26 +274,17 @@ class ArticleSerializer(ModelSerializer):
 
             article.delete()
 
-            raise ValidationError({ 'message': 'well, our backends are trying thier best!', 'stacktrace': exception_traceback.splitlines()}, code=400)
+            raise ValidationError({ 'detail': 'well, our backends are trying thier best!', 'stacktrace': exception_traceback.splitlines()}, code=400)
         # t2 = time.time()
 
         # print('grobid_scan took: ' + str(t2 - t1))
 
         article.title = title
         article.resume = abstract
-        for name in authors:
-            author = Author.objects.filter(name=name).first()
-            if (author is None):
-                author = Author(name=name)
-                author.save()
-            article.authors.add(author)
 
-        for name in affiliations:
-            institution = Institution.objects.filter(name=name).first()
-            if (institution is None):
-                institution = Institution(name=name)
-                institution.save()
-            article.institutions.add(institution)
+        self.create_if_needed_then_add(authors, Author, article, 'authors')
+        self.create_if_needed_then_add(affiliations, Institution, article, 'institutions')
+        self.create_if_needed_then_add(refrences, Refrence, article, 'refrences')
 
         for name in keywords.splitlines():
             name = self.trim(name, seed=r'\n\*\s\$')
@@ -299,13 +299,6 @@ class ArticleSerializer(ModelSerializer):
                 keyword = Keyword(name=name)
                 keyword.save()
             article.keywords.add(keyword)
-
-        for name in refrences:
-            refrence = Refrence.objects.filter(name=name).first()
-            if (refrence is None):
-                refrence = Refrence(name=name)
-                refrence.save()
-            article.refrences.add(refrence)
 
         article.body = body
 

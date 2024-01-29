@@ -69,9 +69,7 @@ DATABASES = {
 # Elasticsearch DSL settings
 ELASTICSEARCH_DSL = {
     'default': {
-        'hosts': 'https://localhost:9200',
-        'http_auth': ('elastic', 'z4y20z0SI6fd_BEjP+d='),
-        'ca_certs': '/workspaces/els/config/certs/http_ca.crt'
+        'hosts': 'http://elasticsearch:9200',
     }
 }
 

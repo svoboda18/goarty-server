@@ -1,0 +1,77 @@
+# docker-compose.yml
+
+version: '3'
+
+volumes:
+  els-data:
+    driver: local
+    name: "elasticsearch-data"
+
+networks:
+  goarty-network:
+    driver: "bridge"
+    name: "goarty-network"
+
+name: "goarty"
+services:
+  app:
+    build:
+      dockerfile: '.devcontainer/Dockerfile'
+      context: '..'
+    ports:
+      - 8000:8000
+    networks:
+        - goarty-network
+    volumes:
+      - ..:/goarty:cached
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      grobid:
+        condition: service_healthy
+  elasticsearch:
+    container_name: "elasticsearch"
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.0
+    environment:
+      - "ELASTICSEARCH_URL=http://elasticsearch:9200"
+      - "ELASTICSEARCH_HOSTS=http://elasticsearch:9200"
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms1024m -Xmx1024m"
+      - action.destructive_requires_name=false
+      - xpack.security.enabled=false
+      - xpack.security.enrollment.enabled=false
+    mem_limit: 2g
+    volumes:
+      - els-data:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+    networks:
+      - goarty-network
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 1
+        delay: 180s
+    healthcheck:
+      test: ["CMD", "curl", "-f", "127.0.0.1:9200/_cluster/health"]
+      interval: 5s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+  grobid:
+    container_name: "grobid"
+    image: lfoppiano/grobid:0.8.0
+    networks:
+        - goarty-network
+    ports:
+      - 8070:8070
+    healthcheck:
+      test: ["CMD", "perl", "-MIO::Socket::INET", "-e", '$s=new IO::Socket::INET("127.0.0.1:8070"); exit($s ? 0 : 1);']
+      interval: 5s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    mem_limit: 6g
+    environment:
+      - JAVA_XMX=6G

@@ -4,6 +4,7 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.serializers import ValidationError
 from rest_framework import status
 
 from django.http import HttpResponse
@@ -16,7 +17,6 @@ from settings import BASE_DIR
 class AriticleViewSet(ModelViewSet):
     serializer_class = ArticleSerializer
     parser_classes = (MultiPartParser, FormParser,)
-    permission_classes = (IsModUser,)
 
     queryset = Article.objects
 
@@ -28,6 +28,53 @@ class AriticleViewSet(ModelViewSet):
             return super().update(request=request, *args, **kwargs)
         return Response({"detail": "Method 'PUT' not allowed."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
+class RelationAddDeleteView(APIView):
+    serializer_class = ArticleSerializer
+    permission_classes = (IsModUser,)
+
+    def get_model(self, name):
+        match name:
+            case 'keyword': return Keyword
+            case 'author': return Author
+            case 'refrence': return Refrence
+            case 'institution': return Institution
+            case _: raise ValidationError({ 'detail': f'invalid relation {name}'})
+
+    def validate_request(self, request, pk, relation):
+        if not relation:
+            raise ValidationError({ 'detail': 'no relation provided'})
+        article = Article.objects.filter(id=pk).first()
+        if not article:
+            raise ValidationError({ 'detail': 'article not found'})
+        model = self.get_model(relation[:-1])
+        id = request.data.get('id')
+        instance = model.objects.filter(id=id).first()
+        if (instance is None):
+            raise ValidationError({ 'detail': f'invalid {relation[:-1]} id {pk}'})
+       
+        return (article, instance)
+    
+    def post(self, request, pk, relation):
+        article, instance = self.validate_request(request, pk, relation)
+        
+        field = getattr(article, relation)
+        field.add(instance)
+
+        ser = ArticleSerializer(instance=article)
+        return Response(data=ser.data)
+    def delete(self, request, pk, relation):
+        article, instance = self.validate_request(request, pk, relation)
+        
+        field = getattr(article, relation)
+        field.remove(instance)
+
+        #TODO: should delete orphened objects
+        #rels = instance.articles.all()
+        #if len(rels) == 0:
+        #    instance.delete()
+
+        ser = ArticleSerializer(instance=article)
+        return Response(data=ser.data)
 
 class KeywordViewSet(ModelViewSet):
     serializer_class = KeywordSerializer

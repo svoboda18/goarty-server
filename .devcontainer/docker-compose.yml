@@ -33,8 +33,6 @@ services:
     container_name: "elasticsearch"
     image: docker.elastic.co/elasticsearch/elasticsearch:8.12.0
     environment:
-      - "ELASTICSEARCH_URL=http://elasticsearch:9200"
-      - "ELASTICSEARCH_HOSTS=http://elasticsearch:9200"
       - discovery.type=single-node
       - bootstrap.memory_lock=true
       - "ES_JAVA_OPTS=-Xms1024m -Xmx1024m"
@@ -72,6 +70,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-    mem_limit: 6g
+    mem_limit: 3g
     environment:
-      - JAVA_XMX=6G
+      - JAVA_XMX=3G

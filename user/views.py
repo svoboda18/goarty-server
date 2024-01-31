@@ -28,7 +28,9 @@ class UserRegistrationAPIView(APIView):
 			if serializer.is_valid(raise_exception=True):
 				instance = serializer.save()
 				if instance:
-					return Response(serializer.data, status=status.HTTP_201_CREATED)
+					data = serializer.data
+					data.pop("password")
+					return Response(data=data, status=status.HTTP_201_CREATED)
 		except:
 			if instance:
 				instance.delete()

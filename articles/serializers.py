@@ -6,7 +6,7 @@ from .models import Article, Author, Keyword, Institution, Refrence
 
 import traceback, re
 
-from bs4 import BeautifulSoup, PageElement
+from bs4 import BeautifulSoup
 from grobid.client import GrobidClient
 
 class AuthorSerializer(ModelSerializer):
@@ -42,8 +42,6 @@ class ArticleSerializer(ModelSerializer):
     institutions = InstitutionSerializer(read_only=True, many=True)
     keywords = KeywordSerializer(read_only=True, many=True)
     refrences = RefrenceSerializer(read_only=True, many=True)
-
-    reader = None
 
     class Meta:
         model = Article
@@ -91,7 +89,6 @@ class ArticleSerializer(ModelSerializer):
                 except DjangoValidationError as exc:
                     errors[field.field_name] = get_error_detail(exc)
                 except SkipField:
-                    print('skii')
                     pass
                 else: set_value(ret, field.source_attrs, validated_value)
 
@@ -99,12 +96,12 @@ class ArticleSerializer(ModelSerializer):
             raise ValidationError(errors)
 
         return ret
-    
+
     def trim(self, text: str, seed='\n', remove_crlf_inbetween=True):
         res = re.findall(rf'[{seed}]+$|^[{seed}]+' + rf'|[\n\r]+' if remove_crlf_inbetween else '', string=text)
         for m in res:
             text = text.replace(m, '')
-        return text
+        return text        
     
     def extarct_authors(self, soup):
         authors = []
@@ -150,7 +147,7 @@ class ArticleSerializer(ModelSerializer):
         refrences = []
 
         affiliations_soup = header.find_all('affiliation')
-        for affiliation in affiliations_soup.children:
+        for affiliation in affiliations_soup:
             #TODO: link each author with correspoding affiliation
             # this needs more research
             index_soup = affiliation.get('key', default=None)
@@ -175,7 +172,7 @@ class ArticleSerializer(ModelSerializer):
 
         refrences_soup = soup.find('listBibl')
         for refrence in refrences_soup.children:
-            if not isinstance(refrence, PageElement):
+            if isinstance(refrence, str):
                 continue
 
             analytic = refrence.find('analytic')
@@ -185,7 +182,7 @@ class ArticleSerializer(ModelSerializer):
                 continue
 
             analytic_title = None
-            if (analytic is not None):
+            if analytic is not None:
                 analytic_title = analytic.find('title')
             monogr_title = monogr.find('title')
             publisher = monogr.find('publisher')

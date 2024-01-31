@@ -19,10 +19,10 @@ class Article(models.Model):
     resume = models.TextField(blank=False)
     pdf = models.FileField(blank=False, validators=[FileExtensionValidator(allowed_extensions=['pdf'])], upload_to='uploaded_articles')
 
-    authors = models.ManyToManyField(Author)
-    institutions = models.ManyToManyField(Institution)
-    keywords = models.ManyToManyField(Keyword)
-    refrences = models.ManyToManyField(Refrence)
+    authors = models.ManyToManyField(Author, related_name='articles')
+    institutions = models.ManyToManyField(Institution, related_name='articles')
+    keywords = models.ManyToManyField(Keyword, related_name='articles')
+    refrences = models.ManyToManyField(Refrence, related_name='articles')
 
     created_at = models.DateTimeField(auto_now_add=True) 
     updated_at = models.DateTimeField(auto_now=True)

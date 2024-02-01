@@ -17,6 +17,7 @@ from settings import BASE_DIR
 class AriticleViewSet(ModelViewSet):
     serializer_class = ArticleSerializer
     parser_classes = (MultiPartParser, FormParser,)
+    permission_classes = (IsModUser,)
 
     queryset = Article.objects
 

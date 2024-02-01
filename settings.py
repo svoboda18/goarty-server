@@ -22,7 +22,7 @@ INSTALLED_APPS = [
     'django_elasticsearch_dsl_drf',
     "user",
     'rest_framework_simplejwt',
-    "articles",
+    "article",
     "search_indexes"
 ]
 

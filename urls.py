@@ -1,8 +1,8 @@
 from django.contrib import admin
 from django.urls import include, re_path
 
-from articles import urls as articles_urls
-from articles.views import DownloadPDFView
+from article import urls as articles_urls
+from article.views import DownloadPDFView
 from search_indexes import urls as search_index_urls
 from user import urls as user_urls
 

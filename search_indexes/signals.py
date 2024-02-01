@@ -3,7 +3,7 @@ from django.dispatch import receiver
 
 from django_elasticsearch_dsl.registries import registry
 
-from articles.models import Article
+from article.models import Article
 
 @receiver(post_save)
 def update_document(sender, instance, **kwargs):

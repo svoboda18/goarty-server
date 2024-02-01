@@ -1,4 +1,4 @@
-from articles.models import Article
+from article.models import Article
 from user.models import User
 from user.permissions import IsAdminUser
 from .serializers import UserRegistrationSerializer, UserSerializer

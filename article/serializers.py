@@ -235,13 +235,14 @@ class ArticleSerializer(ModelSerializer):
         body = ''
         for section_div in body_divs:
             section_head = section_div.find('head')
-            number = section_head.get('n', None)
-            section_title = section_head.get_text()
             p = ''
-            if (number):
-                p = f'{number} '
-            p += section_title
-            p += '\n'
+            if (section_head):
+                number = section_head.get('n', None)
+                section_title = section_head.get_text()
+                if (number):
+                    p = f'{number} '
+                p += section_title
+                p += '\n'
             for child in section_div.children:
                 if (child is section_head):
                     continue

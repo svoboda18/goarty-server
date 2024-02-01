@@ -4,7 +4,7 @@
 yes | python manage.py search_index --rebuild
 
 # Migrate to apply any new db update
-python manage.py makemigrations
+python manage.py makemigrations article search_indexes user
 python manage.py migrate
 
 # Start the server

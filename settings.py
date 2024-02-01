@@ -99,7 +99,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024 # (5) Mb limit
+FILE_UPLOAD_MAX_MEMORY_SIZE = 20 * 1024 * 1024 # (20) Mb limit
 
 # Internationalization
 LANGUAGE_CODE = "en-us"

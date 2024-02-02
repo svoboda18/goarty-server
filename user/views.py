@@ -8,14 +8,14 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 
-class UserModViewSet(ModelViewSet):
+class UsersViewSet(ModelViewSet):
     serializer_class = UserSerializer
     permission_classes = (IsAdminUser,)
 
     queryset = User.objects
 
     def get_queryset(self):
-        return self.queryset.all().filter(is_staff=True, is_admin=False)
+        return self.queryset.all()
 
 class UserRegistrationAPIView(APIView):
 	serializer_class = UserRegistrationSerializer

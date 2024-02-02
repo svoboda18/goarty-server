@@ -15,9 +15,8 @@ def update_document(sender, instance, **kwargs):
     """
         Update elasticsearch records when a related model changes.
     """
-    if app_label == 'articles':
+    if app_label == 'article':
         instances = instance.articles.all()
-        print('eraan')
         for _instance in instances:
             registry.update(_instance)
 
@@ -31,7 +30,7 @@ def update_document(sender, instance, **kwargs):
     """
         Update elasticsearch records when a related model has been deleted.
     """
-    if app_label == 'articles':
+    if app_label == 'article':
         # re-index
         instances = Article.objects.all()
         for _instance in instances:

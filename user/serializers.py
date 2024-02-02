@@ -11,7 +11,7 @@ class UserSerializer(serializers.ModelSerializer):
 		fields = '__all__'
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
-	password = serializers.CharField(max_length=100, min_length=6)
+	password = serializers.CharField(max_length=100, min_length=6, required=True)
 	email = serializers.CharField(max_length=80, required=True)
 	first_name = serializers.CharField(max_length=80, required=True)
 	last_name = serializers.CharField(max_length=80, required=True)
@@ -26,3 +26,8 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 		db_instance.set_password(user_password)
 		db_instance.save()
 		return db_instance
+
+class UserPasswordChangeSerializer(serializers.Serializer):
+    old_password = serializers.CharField(max_length=100, min_length=6, required=True)
+    new_password = serializers.CharField(max_length=100, min_length=6, required=True)
+    confirm_new_password = serializers.CharField(max_length=100, min_length=6, required=True)

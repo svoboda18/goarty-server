@@ -14,16 +14,34 @@ networks:
 
 name: "goarty"
 services:
-  app:
+  goarty-frontend: 
     build:
-      dockerfile: '.devcontainer/Dockerfile'
+      dockerfile: '.devcontainer/Dockerfile.frontend'
+      context: '..'
+    ports:
+      - 5173:5173
+    networks:
+        - goarty-network
+    depends_on:
+      goarty-backend:
+        condition: service_healthy
+  goarty-backend:
+    build:
+      dockerfile: '.devcontainer/Dockerfile.backend'
       context: '..'
     ports:
       - 8000:8000
     networks:
         - goarty-network
     volumes:
-      - ..:/goarty:cached
+      - ..:/goarty-backend:cached
+    mem_limit: 1g
+    healthcheck:
+      test: ["CMD", "curl", "-f", "127.0.0.1:8000/admin"]
+      interval: 5s
+      timeout: 10s
+      retries: 3
+      start_period: 80s
     depends_on:
       elasticsearch:
         condition: service_healthy

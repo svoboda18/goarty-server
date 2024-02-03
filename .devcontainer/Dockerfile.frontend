@@ -1,0 +1,22 @@
+# Dummy file for entrypoint
+
+FROM mcr.microsoft.com/devcontainers/javascript-node:18
+
+ENV LANG="C.UTF-8"
+
+WORKDIR "/goarty-frontend"
+
+# Clone the frontend
+RUN git clone https://github.com/yahiaDZz/swift.git .
+
+# Install dependecies
+RUN npm install
+
+# Add entrypoint
+COPY .devcontainer/docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+# Fix workdir permissions
+RUN chown -R node: .
+
+ENTRYPOINT ["docker-entrypoint.sh", "frontend"]

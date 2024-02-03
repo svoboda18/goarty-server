@@ -1,7 +1,7 @@
 {
   "name": "Django, Elasticsearch and Gorbid",
   "dockerComposeFile": "docker-compose.yml",
-  "workspaceFolder": "/goarty",
-  "service": "app",
-  "forwardPorts": [8000]
+  "workspaceFolder": "/goarty-frontend",
+  "service": "goarty-frontend",
+  "forwardPorts": [5173]
 }

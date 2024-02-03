@@ -17,7 +17,6 @@ from settings import BASE_DIR
 class AriticleViewSet(ModelViewSet):
     serializer_class = ArticleSerializer
     parser_classes = (MultiPartParser, FormParser,)
-    permission_classes = (IsModUser,)
 
     queryset = Article.objects
 
@@ -25,9 +24,13 @@ class AriticleViewSet(ModelViewSet):
         return self.queryset.all()
     
     def update(self, request, *args, **kwargs):
-        if kwargs.get('partial'):
+        if kwargs.get('partial') and bool(request.user and request.user.is_staff):
             return super().update(request=request, *args, **kwargs)
-        return Response({"detail": "Method 'PUT' not allowed."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        return Response({"detail": "Method not allowed."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+    def delete(self, request, *args, **kwargs):
+        if bool(request.user and request.user.is_staff):
+            return super().delete(request=request, *args, **kwargs)
+        return Response({"detail": "Method not allowed."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 class RelationAddDeleteView(APIView):
     serializer_class = ArticleSerializer

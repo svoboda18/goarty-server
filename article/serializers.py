@@ -131,7 +131,7 @@ class ArticleSerializer(ModelSerializer):
         # applies only to bigger pdf files
         client = GrobidClient('http://grobid', 8070)
         res, status = client.serve('processFulltextDocument', pdf, teiCoordinates=[])
-
+        print(res.content)
         assert(status == 200)
 
         # Parse the XML content

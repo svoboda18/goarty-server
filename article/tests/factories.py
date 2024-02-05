@@ -2,11 +2,7 @@ from random import randint
 from factory import Faker, post_generation
 from factory.django import DjangoModelFactory
 
-from ..models.article import Article
-from ..models.author import Author
-from ..models.keyword import Keyword
-from ..models.institution import Institution
-from ..models.refrence import Refrence
+from ..models import Article, Author, Keyword, Institution, Refrence
 
 class AuthorFactory(DjangoModelFactory):
     name = Faker('name')
@@ -35,16 +31,17 @@ class RefrenceFactory(DjangoModelFactory):
 class ArticleFactory(DjangoModelFactory):
     title = Faker('text')
     body = Faker('text')
-    url = Faker('url')
+    pdf = Faker('name')
     resume = Faker('text')
 
     @post_generation
     def relations(self, create, extracted, **kwargs):
         if create:
-            self.authors.add(*AuthorFactory.create_batch(randint(1, 10)))
-            self.keywords.add(*KeywordFactory.create_batch(randint(1, 10)))
-            self.institutions.add(*InstitutionFactory.create_batch(randint(1, 10)))
-            self.refrences.add(*RefrenceFactory.create_batch(randint(1, 10)))
+            n = randint(1, 2)
+            self.authors.add(*AuthorFactory.create_batch(n))
+            self.keywords.add(*KeywordFactory.create_batch(n))
+            self.institutions.add(*InstitutionFactory.create_batch(n))
+            self.refrences.add(*RefrenceFactory.create_batch(n))
 
     class Meta:
         model = Article

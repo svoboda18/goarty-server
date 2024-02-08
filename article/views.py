@@ -7,30 +7,64 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.serializers import ValidationError
 from rest_framework import status
 
-from django.http import HttpResponse
-
+from django.http import HttpResponse, JsonResponse
 from user.permissions import IsModUser
-from .models import Article, Keyword, Refrence, Institution, Author
-from .serializers import ArticleSerializer, KeywordSerializer, RefrenceSerializer, InstitutionSerializer, AuthorSerializer
+from .models import Article, Keyword, Refrence, Institution, Author, CharCount
+from .serializers import (
+    ArticleSerializer,
+    KeywordSerializer,
+    RefrenceSerializer,
+    InstitutionSerializer,
+    AuthorSerializer,
+)
 from settings import BASE_DIR
+
+
+def increment_chars_modified(req):
+    # Get the value of the incrementation value from the request
+    increment = req.GET.get("increment")
+
+    try:
+        # Attempt to convert the input parameter to an integer
+        increment = int(increment)
+        # Get the CharCount object or create it if it doesn't exist
+        char_count, created = CharCount.objects.get_or_create(pk=1)
+        # Increment the count by the input parameter value
+        char_count.count += increment
+        char_count.save()
+        return JsonResponse({"count": char_count.count}, status=200)
+    except ValueError:
+        return JsonResponse(
+            {"error": "Invalid input parameter. Please provide an integer."}, status=400
+        )
+
 
 class AriticleViewSet(ModelViewSet):
     serializer_class = ArticleSerializer
-    parser_classes = (MultiPartParser, FormParser,)
+    parser_classes = (
+        MultiPartParser,
+        FormParser,
+    )
 
     queryset = Article.objects
 
     def get_queryset(self):
         return self.queryset.all()
-    
+
     def update(self, request, *args, **kwargs):
-        if kwargs.get('partial') and bool(request.user and request.user.is_staff):
+        if kwargs.get("partial") and bool(request.user and request.user.is_staff):
             return super().update(request=request, *args, **kwargs)
-        return Response({"detail": "Method not allowed."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        return Response(
+            {"detail": "Method not allowed."}, status=status.HTTP_405_METHOD_NOT_ALLOWED
+        )
+
     def delete(self, request, *args, **kwargs):
         if bool(request.user and request.user.is_staff):
             return super().delete(request=request, *args, **kwargs)
-        return Response({"detail": "Method not allowed."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        return Response(
+            {"detail": "Method not allowed."}, status=status.HTTP_405_METHOD_NOT_ALLOWED
+        )
+
 
 class RelationAddDeleteView(APIView):
     serializer_class = ArticleSerializer
@@ -38,47 +72,54 @@ class RelationAddDeleteView(APIView):
 
     def get_model(self, name):
         match name:
-            case 'keyword': return Keyword
-            case 'author': return Author
-            case 'refrence': return Refrence
-            case 'institution': return Institution
-            case _: raise ValidationError({ 'detail': f'invalid relation {name}'})
+            case "keyword":
+                return Keyword
+            case "author":
+                return Author
+            case "refrence":
+                return Refrence
+            case "institution":
+                return Institution
+            case _:
+                raise ValidationError({"detail": f"invalid relation {name}"})
 
     def validate_request(self, request, pk, relation):
         if not relation:
-            raise ValidationError({ 'detail': 'no relation provided'})
+            raise ValidationError({"detail": "no relation provided"})
         article = Article.objects.filter(id=pk).first()
         if not article:
-            raise ValidationError({ 'detail': 'article not found'})
+            raise ValidationError({"detail": "article not found"})
         model = self.get_model(relation[:-1])
-        id = request.data.get('id')
+        id = request.data.get("id")
         instance = model.objects.filter(id=id).first()
-        if (instance is None):
-            raise ValidationError({ 'detail': f'invalid {relation[:-1]} id {pk}'})
-       
+        if instance is None:
+            raise ValidationError({"detail": f"invalid {relation[:-1]} id {pk}"})
+
         return (article, instance)
-    
+
     def post(self, request, pk, relation):
         article, instance = self.validate_request(request, pk, relation)
-        
+
         field = getattr(article, relation)
         field.add(instance)
 
         ser = ArticleSerializer(instance=article)
         return Response(data=ser.data)
+
     def delete(self, request, pk, relation):
         article, instance = self.validate_request(request, pk, relation)
-        
+
         field = getattr(article, relation)
         field.remove(instance)
 
-        #TODO: should delete orphened objects
-        #rels = instance.articles.all()
-        #if len(rels) == 0:
+        # TODO: should delete orphened objects
+        # rels = instance.articles.all()
+        # if len(rels) == 0:
         #    instance.delete()
 
         ser = ArticleSerializer(instance=article)
         return Response(data=ser.data)
+
 
 class KeywordViewSet(ModelViewSet):
     serializer_class = KeywordSerializer
@@ -89,6 +130,7 @@ class KeywordViewSet(ModelViewSet):
     def get_queryset(self):
         return self.queryset.all()
 
+
 class RefrenceViewSet(ModelViewSet):
     serializer_class = RefrenceSerializer
     permission_classes = (IsModUser,)
@@ -97,6 +139,7 @@ class RefrenceViewSet(ModelViewSet):
 
     def get_queryset(self):
         return self.queryset.all()
+
 
 class InstitutionViewSet(ModelViewSet):
     serializer_class = InstitutionSerializer
@@ -107,6 +150,7 @@ class InstitutionViewSet(ModelViewSet):
     def get_queryset(self):
         return self.queryset.all()
 
+
 class AuthorViewSet(ModelViewSet):
     serializer_class = AuthorSerializer
     permission_classes = (IsModUser,)
@@ -116,18 +160,24 @@ class AuthorViewSet(ModelViewSet):
     def get_queryset(self):
         return self.queryset.all()
 
+
 class DownloadPDFView(APIView):
     def get(self, req, pdf):
         if pdf is None:
-            return Response({"detail": "No file supplied"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+            return Response(
+                {"detail": "No file supplied"},
+                status=status.HTTP_405_METHOD_NOT_ALLOWED,
+            )
         file_path = os.path.join(BASE_DIR, "uploaded_articles", pdf)
         if os.path.isfile(file_path):
-            with open(file_path, 'rb') as fd:
+            with open(file_path, "rb") as fd:
                 file_data = fd.read()
 
-                response = HttpResponse(file_data, content_type='application/pdf')
-                response['Content-Disposition'] = f"attachment; filename={os.path.basename(file_path)}"
-                response['Content-Length'] = len(file_data)
-                response['Access-Control-Expose-Headers'] = 'Content-Disposition'
+                response = HttpResponse(file_data, content_type="application/pdf")
+                response["Content-Disposition"] = (
+                    f"attachment; filename={os.path.basename(file_path)}"
+                )
+                response["Content-Length"] = len(file_data)
+                response["Access-Control-Expose-Headers"] = "Content-Disposition"
                 return response
         return Response({"detail": "File not found."}, status=status.HTTP_404_NOT_FOUND)
